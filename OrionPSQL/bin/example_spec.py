@@ -1,0 +1,16 @@
+verbose = False
+model = 'dense_logit'
+approach = 'f'
+algo = 'bgd'
+model_id = 101
+table_r = 'newr'
+table_s = 'news'
+table_t = 't'
+srsplits = 2
+dS = 5
+dR = 10
+nR = 1000
+w_init = 0.0
+iters = 10
+regularizer = 2
+stepsize = 0.02

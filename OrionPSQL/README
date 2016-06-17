@@ -1,0 +1,19 @@
+1. Install PostgreSQL (>= 9.1.4) and create a test database
+
+2. Set up environment variables for PostgreSQL (change as per your system):
+source env.path
+
+3. Start the postgres server:
+/path/to/pg_ctl start -D <database name> -l logfile
+
+4. Compile and install Orion on PostgreSQL:
+make
+make install-pg
+
+5. Refer to README in PSQL data generator to create sample files for S and R
+
+6. Go to etl folder to transform and load the sample S and R as database tables:
+sh example_etl.sh
+
+7. Go to bin folder and run example using the sample S and R loaded into the database:
+sh example_run.sh

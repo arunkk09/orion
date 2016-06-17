@@ -1,0 +1,4 @@
+1. Build code and run example using the given script:
+sh example_gen.sh
+
+2. Refer to README in Orion PSQL for loading tables to database

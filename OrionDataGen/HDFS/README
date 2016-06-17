@@ -1,0 +1,10 @@
+1. Create sample dataset files for S and R using data generator:
+hadoop jar /path/to/svm_scale/dist/svm_scale.jar 10 5 4 7 1.0 1 S R
+
+2. Load each of S and R to its own folder on HDFS:
+hdfs dfs -put S /hdfs/path/to/S
+hdfs dfs -put R /hdfs/path/to/R
+
+3. Create external tables for Hive to register S and R:
+CREATE EXTERNAL TABLE textS(sid int, forkey int, label double, xs array<double>) row format delimited fields terminated by ' ' collection items terminated by ',' lines terminated by '\n' stored as textfile location '/hdfs/path/to/S';
+CREATE EXTERNAL TABLE textR(rid int, xr array<double>) row format delimited fields terminated by ' ' collection items terminated by ',' lines terminated by '\n' stored as textfile location '/hdfs/path/to/R';

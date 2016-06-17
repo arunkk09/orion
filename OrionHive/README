@@ -1,0 +1,36 @@
+1. Refer to README in HDFS data generator to create and load sample tables for S and R
+
+2. Set up Hadoop and Hive environments (change as per your system)
+sh setup-env.sh
+
+3. Register Orion jar and all FUNCTIONs with Hive:
+add jar /path/to/hiveorion.jar;
+CREATE temporary FUNCTION ConcatArray as 'hiveorion.ConcatArray';
+CREATE temporary FUNCTION LossGrad as 'hiveorion.LossGrad';
+CREATE temporary FUNCTION FactFunc1 as 'hiveorion.FactFunc1';
+CREATE temporary FUNCTION FactFunc2 as 'hiveorion.FactFunc2';
+CREATE temporary FUNCTION FactFunc3 as 'hiveorion.FactFunc3';
+CREATE temporary FUNCTION FSQLPlus1 as 'hiveorion.FSQLPlus1';
+CREATE temporary FUNCTION FSQLPlus2 as 'hiveorion.FSQLPlus2';
+CREATE temporary FUNCTION FSQLPlus3 as 'hiveorion.FSQLPlus3';
+
+4. To run one iteration of the Stream approach:
+SELECT LossGrad(textS.label, ConcatArray(textS.xs, textR.xr), array(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1)) from textS join textR on (textS.forkey = textR.rid);
+
+5. To materialize the join output and run one iteration of the Materialize approach:
+DROP table textT;
+CREATE table textT as select textR.rid, textS.label, ConcatArray(textS.xs, textR.xr) as x from textS join textR on (textS.forkey = textR.rid);
+SELECT LossGrad(label, x, array(0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1)) from textT;
+
+6. To run one iteration of the Factorize (FL) approach:
+SELECT FactFunc3(textR.rid, textR.xr, 14, 10, t3.res2) from textR join (SELECT FactFunc2(textS.forkey, textS.label, textS.xs, array(0.1,0.1,0.1), 14, 10, t2.res) as res2 from textS join (SELECT FactFunc1(textR.rid, textR.xr, array(0.1,0.1,0.1,0.1,0.1,0.1,0.1), 14) as res from textR) t2 on (1 = 1)) t3 on (1 = 1);
+In the above, note that 14 is the number of hash buckets as an argument (14 = 1.4*10 = 1.4*nR), while 11 is the total number of features in [XS XR] (10 = 4+7-1 = dS+dR-1)
+
+7. To run one iteration of the FL-SQL+ approach:
+DROP table HR;
+DROP table HSplus;
+CREATE table HR as select textR.rid as rid, FSQLPlus1(array(0.1,0.1,0.1,0.1,0.1,0.1,0.1), textR.xR) as pdp from textR;
+CREATE table HSplus as select HR.rid as rid, FSQLPlus2(HR.pdp, textS.label, textS.xs, array(0.1,0.1,0.1)) as lg from textS join HR on (textS.forkey = HR.rid) GROUP BY HR.rid;
+SELECT FSQLPlus3(textR.xr, HSplus.lg) from HSplus join textR on (textR.rid = HSplus.rid);
+
+BGD can be set up as a loop over the above queries from an external script, say, a shell script, or a batch script.
